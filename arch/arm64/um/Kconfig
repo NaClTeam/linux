@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: GPL-2.0
+
+menu "Host processor features"
+
+source "arch/arm64/Kconfig.cpu"
+
+endmenu
+
+config 64BIT
+	def_bool y
+
+config 3_LEVEL_PGTABLES
+	def_bool y
+
+config GENERIC_HWEIGHT
+	def_bool y
