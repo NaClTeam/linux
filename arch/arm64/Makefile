@@ -20,11 +20,7 @@ LDFLAGS_vmlinux		+= -shared -Bsymbolic -z notext \
 			$(call ld-option, --no-apply-dynamic-relocs)
 endif
 
-ifeq ($(CONFIG_ARM64_ERRATUM_843419),y)
-  ifeq ($(CONFIG_ARM64_LD_HAS_FIX_ERRATUM_843419),y)
-LDFLAGS_vmlinux	+= --fix-cortex-a53-843419
-  endif
-endif
+include $(srctree)/arch/arm64/Makefile.cpu
 
 cc_has_k_constraint := $(call try-run,echo				\
 	'int main(void) {						\
@@ -77,32 +73,6 @@ else ifeq ($(CONFIG_ARM64_PTR_AUTH_KERNEL),y)
   endif
 else
   KBUILD_CFLAGS += $(call cc-option,-mbranch-protection=none)
-endif
-
-# Tell the assembler to support instructions from the latest target
-# architecture.
-#
-# For non-integrated assemblers we'll pass this on the command line, and for
-# integrated assemblers we'll define ARM64_ASM_ARCH and ARM64_ASM_PREAMBLE for
-# inline usage.
-#
-# We cannot pass the same arch flag to the compiler as this would allow it to
-# freely generate instructions which are not supported by earlier architecture
-# versions, which would prevent a single kernel image from working on earlier
-# hardware.
-ifeq ($(CONFIG_AS_HAS_ARMV8_5), y)
-  asm-arch := armv8.5-a
-else ifeq ($(CONFIG_AS_HAS_ARMV8_4), y)
-  asm-arch := armv8.4-a
-else ifeq ($(CONFIG_AS_HAS_ARMV8_3), y)
-  asm-arch := armv8.3-a
-else ifeq ($(CONFIG_AS_HAS_ARMV8_2), y)
-  asm-arch := armv8.2-a
-endif
-
-ifdef asm-arch
-KBUILD_CFLAGS	+= -Wa,-march=$(asm-arch) \
-		   -DARM64_ASM_ARCH='"$(asm-arch)"'
 endif
 
 ifeq ($(CONFIG_SHADOW_CALL_STACK), y)
