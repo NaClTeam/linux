@@ -9,6 +9,7 @@
 #include <sys/ptrace.h>
 #include <sysdep/ptrace.h>
 #include <sysdep/ptrace_user.h>
+#include <ptrace_user.h>
 #include <registers.h>
 
 /* This is set once at boot time and not changed thereafter */
@@ -20,9 +21,9 @@ int init_pid_registers(int pid)
 {
 	int err;
 
-	err = ptrace(PTRACE_GETREGS, pid, 0, exec_regs);
+	err = ptrace_getregs(pid, exec_regs);
 	if (err < 0)
-		return -errno;
+		return err;
 
 	arch_init_registers(pid);
 	get_fp_registers(pid, exec_fp_regs);

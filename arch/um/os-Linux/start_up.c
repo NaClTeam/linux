@@ -180,8 +180,9 @@ static void __init check_sysemu(void)
 		fatal("check_sysemu : expected SIGTRAP, got status = %d\n",
 		      status);
 
-	if (ptrace(PTRACE_GETREGS, pid, 0, regs) < 0)
-		fatal_perror("check_sysemu : PTRACE_GETREGS failed");
+	n = ptrace_getregs(pid, regs);
+	if (n < 0)
+		fatal("check_sysemu : PTRACE_GETREGS failed, err = %d\n", n);
 	if (PT_SYSCALL_NR(regs) != __NR_getpid) {
 		non_fatal("check_sysemu got system call number %d, "
 			  "expected %d...", PT_SYSCALL_NR(regs), __NR_getpid);
