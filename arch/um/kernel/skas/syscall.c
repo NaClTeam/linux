@@ -29,8 +29,14 @@ void handle_syscall(struct uml_pt_regs *r)
 	    time_travel_mode == TT_MODE_EXTERNAL)
 		schedule();
 
-	/* Initialize the syscall number and default return value. */
+#ifdef PT_SYSCALL_NR
+	/* initialize the syscall number for architecture
+	 * that stores them in user_pt_regs. otherwise,
+	 * it will be fetched before calling handle_trap() */
 	UPT_SYSCALL_NR(r) = PT_SYSCALL_NR(r->gp);
+#endif
+
+	/* default return value. */
 	PT_REGS_SET_SYSCALL_RETURN(regs, -ENOSYS);
 
 	if (syscall_trace_enter(regs))

@@ -193,8 +193,12 @@ static void handle_trap(int pid, struct uml_pt_regs *regs,
 
 	if (!local_using_sysemu)
 	{
+#ifdef PT_SYSCALL_NR_OFFSET
 		err = ptrace(PTRACE_POKEUSER, pid, PT_SYSCALL_NR_OFFSET,
 			     __NR_getpid);
+#else
+		err = put_syscall_nr(pid, __NR_getpid);
+#endif
 		if (err < 0) {
 			printk(UM_KERN_ERR "%s - nullifying syscall failed, errno = %d\n",
 			       __func__, errno);
@@ -474,6 +478,17 @@ void userspace(struct uml_pt_regs *regs, unsigned long *aux_fp_regs)
 				else handle_segv(pid, regs, aux_fp_regs);
 				break;
 			case SIGTRAP + 0x80:
+#ifndef PT_SYSCALL_NR_OFFSET
+				/* for architecture that doesn't store syscall number in
+				 * pt_user_regs, fetch it separately via ptrace now */
+				err = get_syscall_nr(pid, &UPT_SYSCALL_NR(regs));
+				if (err < 0) {
+					printk(UM_KERN_ERR "%s - get_syscall_nr failed, err = %d\n",
+					__func__, err);
+					fatal_sigsegv();
+				}
+#endif
+
 			        handle_trap(pid, regs, local_using_sysemu);
 				break;
 			case SIGTRAP:
@@ -499,8 +514,12 @@ void userspace(struct uml_pt_regs *regs, unsigned long *aux_fp_regs)
 			interrupt_end();
 
 			/* Avoid -ERESTARTSYS handling in host */
+#ifdef PT_SYSCALL_NR_OFFSET
 			if (PT_SYSCALL_NR_OFFSET != PT_SYSCALL_RET_OFFSET)
 				PT_SYSCALL_NR(regs->gp) = -1;
+#else
+			put_syscall_nr(pid, -1);
+#endif
 		}
 	}
 }

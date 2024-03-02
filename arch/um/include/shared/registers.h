@@ -7,6 +7,7 @@
 #define __REGISTERS_H
 
 #include <sysdep/ptrace.h>
+#include <sysdep/ptrace_user.h>
 
 extern int save_i387_registers(int pid, unsigned long *fp_regs);
 extern int restore_i387_registers(int pid, unsigned long *fp_regs);
@@ -18,5 +19,9 @@ extern int init_pid_registers(int pid);
 extern void get_safe_registers(unsigned long *regs, unsigned long *fp_regs);
 extern int get_fp_registers(int pid, unsigned long *regs);
 extern int put_fp_registers(int pid, unsigned long *regs);
+#ifndef PT_SYSCALL_NR_OFFSET
+extern int get_syscall_nr(int pid, unsigned long *syscallno);
+extern int put_syscall_nr(int pid, unsigned long syscallno);
+#endif
 
 #endif
