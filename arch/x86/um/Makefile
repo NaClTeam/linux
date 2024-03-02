@@ -13,7 +13,7 @@ obj-y = bugs_$(BITS).o delay.o fault.o ldt.o \
 	ptrace_$(BITS).o ptrace_user.o setjmp_$(BITS).o signal.o \
 	stub_$(BITS).o stub_segv.o \
 	sys_call_table_$(BITS).o sysrq_$(BITS).o tls_$(BITS).o \
-	mem_$(BITS).o subarch.o os-Linux/
+	mem_$(BITS).o subarch.o capflags.o os-Linux/
 
 ifeq ($(CONFIG_X86_32),y)
 
@@ -50,3 +50,14 @@ UNPROFILE_OBJS := stub_segv.o
 CFLAGS_stub_segv.o := $(CFLAGS_NO_HARDENING)
 
 include $(srctree)/arch/um/scripts/Makefile.rules
+
+quiet_cmd_mkcapflags = MKCAP   $@
+      cmd_mkcapflags = $(CONFIG_SHELL) $(srctree)/$(srctree)/arch/x86/kernel/cpu/mkcapflags.sh $@ $^
+
+cpufeature = $(srctree)/arch/x86/include/asm/cpufeatures.h
+vmxfeature = $(srctree)/arch/x86/include/asm/vmxfeatures.h
+
+$(obj)/capflags.c: $(cpufeature) $(vmxfeature) $(srctree)/arch/x86/kernel/cpu/mkcapflags.sh FORCE
+	$(call if_changed,mkcapflags)
+
+targets += capflags.c
